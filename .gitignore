@@ -1,0 +1,15 @@
+# Environment Configuration
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+*.db
+*.db-journal
+*.log
+venv/
+.venv/
+.DS_Store
+AGENTS.md
+tele-shop-bot/
+*.bat
+*.vbs
