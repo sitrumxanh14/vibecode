@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý cửa hàng</title>
+    <style>
+        body { font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.5; background: #f4f5f7; color: #1f2933; margin: 0; }
+        .wrap { max-width: 1050px; margin: 0 auto; padding: 18px; }
+        .top { background: #2f3b4c; color: #fff; }
+        .top .wrap { display: flex; justify-content: space-between; align-items: center; padding-top: 14px; padding-bottom: 14px; }
+        .top h1 { font-size: 19px; margin: 0; font-weight: 600; }
+        .top a { color: #dbe3ee; text-decoration: none; margin-left: 14px; }
+        .top a:hover { color: #fff; text-decoration: underline; }
+        .topright { display: flex; align-items: center; gap: 14px; }
+        .top a.botmgr { margin: 0; padding: 6px 12px; border: 1px solid #aab6c6; border-radius: 3px; color: #fff; font-weight: 600; }
+        .top a.botmgr:hover, .top a.botmgr.on { background: #44546b; text-decoration: none; }
+        .topright form { margin: 0; }
+        .topright select { margin: 0; }
+        .small { font-size: 13px; color: #6b7785; }
+        .top .small { color: #aab6c6; }
+        nav { background: #fff; border-bottom: 1px solid #d5dae1; }
+        nav .wrap { padding-top: 0; padding-bottom: 0; }
+        nav a { display: inline-block; padding: 12px 16px; color: #3e4c5e; text-decoration: none; border-bottom: 3px solid transparent; }
+        nav a:hover { background: #f1f3f6; }
+        nav a.on { border-bottom-color: #2f5d9e; color: #1f2933; font-weight: 600; }
+        a { color: #2f5d9e; }
+        h2 { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+        .card { background: #fff; border: 1px solid #d5dae1; border-radius: 4px; padding: 18px; margin-bottom: 18px; }
+        .msg { border: 1px solid #c9d6c3; background: #eef5ea; color: #2f4a26; border-radius: 4px; padding: 10px 14px; margin-bottom: 18px; }
+        .msg.err { border-color: #e0bcbc; background: #fbeeee; color: #8a2c2c; }
+        .msg.info { border-color: #e3d9b4; background: #faf6e6; color: #5c4e1a; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #d5dae1; padding: 9px 11px; text-align: left; vertical-align: top; }
+        th { background: #eceff3; font-weight: 600; color: #3e4c5e; }
+        tbody tr:nth-child(even) td { background: #fafbfc; }
+        input[type=text], input[type=number], input[type=password], textarea {
+            width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #b9c1cc; border-radius: 3px; font-family: inherit; font-size: 15px; background: #fff;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #2f5d9e; box-shadow: 0 0 0 2px #d7e3f5; }
+        textarea { font-family: Consolas, "Courier New", monospace; font-size: 14px; }
+        button { padding: 7px 16px; border: 1px solid #aeb7c3; border-radius: 3px; background: #f1f3f6; color: #1f2933; cursor: pointer; font-size: 14px; font-family: inherit; }
+        button:hover { background: #e4e8ee; }
+        button.primary { background: #2f5d9e; border-color: #2f5d9e; color: #fff; font-weight: 600; }
+        button.primary:hover { background: #274e87; }
+        button.danger { background: #fff; border-color: #c98a8a; color: #9b2c2c; }
+        button.danger:hover { background: #fbeeee; }
+        label { display: block; margin: 10px 0 4px; font-weight: 600; color: #3e4c5e; }
+        form.inline { display: inline; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+        .stats td { width: 20%; background: #fff !important; }
+        .stats .n { font-size: 22px; font-weight: 600; }
+        .filter a { margin-right: 14px; text-decoration: none; }
+        .filter a.on { font-weight: 600; color: #1f2933; border-bottom: 2px solid #2f5d9e; }
+        .mono { font-family: Consolas, "Courier New", monospace; font-size: 14px; }
+        .tag { display: inline-block; padding: 1px 8px; border-radius: 3px; font-size: 13px; border: 1px solid #c8ced6; background: #f1f3f6; color: #3e4c5e; }
+        .tag.ok { background: #eaf3e6; border-color: #bcd3b3; color: #2f5a22; }
+        .tag.wait { background: #fbf3dc; border-color: #e2d29b; color: #6b5314; }
+        .tag.off { background: #eceff3; border-color: #c8ced6; color: #6b7785; }
+        select { padding: 6px 8px; border: 1px solid #b9c1cc; border-radius: 3px; font-family: inherit; font-size: 14px; background: #fff; color: #1f2933; margin-right: 8px; }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <div class="wrap">
+            <div>
+                <h1>Quản lý cửa hàng</h1>
+                {% if cur_bot %}
+                <div class="small">Bot {% if cur_bot.username %}<a href="https://t.me/{{ cur_bot.username }}" target="_blank" rel="noopener" style="color:#dbe3ee;margin:0;">@{{ cur_bot.username }}</a>{% else %}(chưa rõ){% endif %}: {{ 'đang chạy' if bot_active else 'đang dừng' }}</div>
+                {% else %}
+                <div class="small">Chưa có bot nào</div>
+                {% endif %}
+            </div>
+            <div class="topright">
+                <a href="/?tab=bots" class="botmgr {{ 'on' if tab == 'bots' else '' }}">ADMIN</a>
+                {% if bots %}
+                <form action="/bots/select" method="post" class="inline">
+                    <input type="hidden" name="back_tab" value="{{ tab }}">
+                    <select name="bot_id" onchange="this.form.submit()">
+                        {% for b in bots %}
+                        <option value="{{ b.id }}" {{ 'selected' if cur_bot and cur_bot.id == b.id else '' }}>@{{ b.username or ('bot ' ~ b.id) }}{{ '' if b.running else ' (dừng)' }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+                {% endif %}
+                <a href="/?tab={{ tab }}">Làm mới</a> |
+                <a href="/logout">Đăng xuất</a>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="wrap">
+            {% set tabs = [
+                ('overview', 'Tổng quan'),
+                ('products', 'Sản phẩm / Kho'),
+                ('orders', 'Đơn hàng'),
+                ('giftcodes', 'Giftcode / Số dư'),
+                ('broadcast', 'Thông báo'),
+                ('settings', 'Cài đặt')
+            ] %}
+            {% for key, label in tabs %}
+            <a href="/?tab={{ key }}" class="{{ 'on' if tab == key else '' }}">{{ label }}{% if key == 'orders' and stats.pending_orders > 0 %} ({{ stats.pending_orders }}){% endif %}</a>
+            {% endfor %}
+        </div>
+    </nav>
+
+    <div class="wrap">
+        {% if cur_bot and not bot_active and tab != 'bots' %}
+        <div class="msg info">Bot này đang dừng nên khách chưa nhắn được. Vào tab Quản lý Bot để chạy lại.</div>
+        {% endif %}
+        {% if msg %}<div class="msg">{{ msg }}</div>{% endif %}
+        {% if err %}<div class="msg err">{{ err }}</div>{% endif %}
+
+        {% if tab == 'bots' %}
+        <div class="card">
+            <h2>Danh sách bot</h2>
+            {% if bots %}
+            <table>
+                <tr><th>ID</th><th>Username</th><th>Tên</th><th>Token</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                {% for b in bots %}
+                <tr>
+                    <td>{{ b.id }}</td>
+                    <td>{% if b.username %}<a href="https://t.me/{{ b.username }}" target="_blank" rel="noopener">@{{ b.username }}</a>{% else %}(chưa rõ){% endif %}{% if cur_bot and cur_bot.id == b.id %} <span class="tag">đang quản lý</span>{% endif %}</td>
+                    <td>{{ b.name or '' }}</td>
+                    <td class="mono">{{ b.token | mask_token }}</td>
+                    <td>{% if b.running %}<span class="tag ok">Đang chạy</span>{% else %}<span class="tag off">Đã dừng</span>{% endif %}</td>
+                    <td>
+                        <form action="/bots/select" method="post" class="inline">
+                            <input type="hidden" name="bot_id" value="{{ b.id }}">
+                            <input type="hidden" name="back_tab" value="overview">
+                            <button type="submit">Quản lý</button>
+                        </form>
+                        <form action="/bots/{{ b.id }}/toggle" method="post" class="inline">
+                            <button type="submit">{{ 'Dừng' if b.running else 'Chạy' }}</button>
+                        </form>
+                        <form action="/bots/{{ b.id }}/delete" method="post" class="inline" onsubmit="return confirm('Xóa bot này cùng toàn bộ sản phẩm, kho, đơn hàng và khách hàng của nó? Không thể khôi phục.');">
+                            <button type="submit" class="danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Chưa có bot nào. Thêm bot đầu tiên ở khung bên dưới.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Thêm bot mới</h2>
+            <form action="/bots/add" method="post">
+                <div class="grid">
+                    <div>
+                        <label>Token bot (lấy từ @BotFather)</label>
+                        <input type="text" name="token" placeholder="123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required autocomplete="off">
+                    </div>
+                    <div>
+                        <label>Username bot (không bắt buộc, dùng để đối chiếu)</label>
+                        <input type="text" name="username" placeholder="@ten_bot">
+                    </div>
+                </div>
+                <p><button type="submit" class="primary">Thêm bot</button></p>
+            </form>
+            <p class="small">Mỗi bot có sản phẩm, kho, đơn hàng, khách hàng và cài đặt thanh toán riêng. Hệ thống kiểm tra token với Telegram trước khi thêm, và bot mới chạy ngay mà không cần khởi động lại.</p>
+        </div>
+        {% endif %}
+
+        {% if tab == 'overview' %}
+        <div class="card">
+            <table class="stats">
+                <tr>
+                    <th>Doanh thu</th><th>Đơn đã giao</th><th>Đơn chờ duyệt</th><th>Khách hàng</th><th>Tồn kho</th>
+                </tr>
+                <tr>
+                    <td class="n">{{ stats.revenue | vnd }}</td>
+                    <td class="n">{{ stats.paid_orders }}</td>
+                    <td class="n">{{ stats.pending_orders }}</td>
+                    <td class="n">{{ stats.total_users }}</td>
+                    <td class="n">{{ stats.total_stock }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Đơn đang chờ duyệt</h2>
+            {% if pending_orders %}
+            <table>
+                <tr><th>Mã đơn</th><th>Khách</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Thời gian</th><th>Thao tác</th></tr>
+                {% for o in pending_orders %}
+                <tr>
+                    <td class="mono">{{ o.order_code }}</td>
+                    <td>{{ '@' + o.username if o.username else o.chat_id }}</td>
+                    <td>{{ o.product_name }} x{{ o.quantity }}</td>
+                    <td>{{ o.total_amount | vnd }}</td>
+                    <td>{{ o.created_at }}</td>
+                    <td>
+                        <form action="/orders/{{ o.id }}/approve" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="overview">
+                            <button type="submit" class="primary">Duyệt</button>
+                        </form>
+                        <form action="/orders/{{ o.id }}/cancel" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="overview">
+                            <button type="submit" class="danger">Hủy</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Không có đơn nào đang chờ.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if tab == 'products' %}
+        <div class="card">
+            <h2>Thêm sản phẩm</h2>
+            <form action="/products/add" method="post">
+                <div class="grid">
+                    <div>
+                        <label>Tên sản phẩm</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div>
+                        <label>Giá bán (VNĐ)</label>
+                        <input type="number" name="price" min="0" required>
+                    </div>
+                </div>
+                <label>Mô tả</label>
+                <input type="text" name="description">
+                <p><button type="submit" class="primary">Thêm sản phẩm</button></p>
+            </form>
+        </div>
+
+        {% if products %}
+        <div class="card">
+            <h2>Nạp kho sản phẩm</h2>
+            <form action="/products/stock" method="post">
+                <label>Chọn sản phẩm cần nạp kho</label>
+                <select name="product_id" style="width:100%;padding:8px 10px;margin:0;" required>
+                    {% for p in products %}
+                    <option value="{{ p.id }}">{{ p.name }} — Giá: {{ p.price | vnd }} (Tồn kho: {{ p.stock_count }})</option>
+                    {% endfor %}
+                </select>
+                <label>Nạp kho (mỗi dòng là một tài khoản / key):</label>
+                <textarea name="stock_lines" rows="4" required></textarea>
+                <p><button type="submit" class="primary">Nạp vào kho</button></p>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2>Danh sách sản phẩm</h2>
+            {% if products %}
+            <table>
+                <tr><th>Sản phẩm</th><th>Giá bán</th><th>Tồn kho</th><th>Đã bán</th><th>Thao tác</th></tr>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        <b>{{ p.name }}</b> {% if p.is_active %}<span class="tag ok">Đang bán</span>{% else %}<span class="tag off">Đang ẩn</span>{% endif %}<br>
+                        <span class="small">{{ p.description or 'Không có mô tả' }}</span>
+                    </td>
+                    <td>{{ p.price | vnd }}</td>
+                    <td>{{ p.stock_count }}</td>
+                    <td>{{ p.sold_count }}</td>
+                    <td>
+                        <button type="button" onclick="var e=document.getElementById('edit-{{ p.id }}');e.style.display=(e.style.display==='none'?'table-row':'none');">Sửa</button>
+                        <form action="/products/{{ p.id }}/toggle" method="post" class="inline">
+                            <button type="submit">{{ 'Ẩn' if p.is_active else 'Mở bán' }}</button>
+                        </form>
+                        <form action="/products/{{ p.id }}/delete" method="post" class="inline" onsubmit="return confirm('Xóa sản phẩm này và toàn bộ tồn kho?');">
+                            <button type="submit" class="danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="edit-{{ p.id }}" style="display:none;">
+                    <td colspan="5" style="background:#f7f8fa;">
+                        <form action="/products/{{ p.id }}/edit" method="post">
+                            <div class="grid">
+                                <div>
+                                    <label>Tên sản phẩm</label>
+                                    <input type="text" name="name" value="{{ p.name }}" required>
+                                </div>
+                                <div>
+                                    <label>Giá bán (VNĐ)</label>
+                                    <input type="number" name="price" min="0" value="{{ p.price }}" required>
+                                </div>
+                            </div>
+                            <label>Mô tả</label>
+                            <input type="text" name="description" value="{{ p.description or '' }}">
+                            <label>Danh sách hàng đang có trong kho ({{ p.stock_count }} sản phẩm — mỗi dòng 1 sản phẩm, có thể thêm / sửa / xóa trực tiếp, tồn kho tự cập nhật theo số dòng):</label>
+                            <textarea id="stock-box-{{ p.id }}" name="stock_lines" rows="8" oninput="var c=this.value.split(/\r?\n/).filter(function(l){return l.trim().length>0;}).length;document.getElementById('stock-cnt-{{ p.id }}').textContent=c;">{{ p.unsold_text or '' }}</textarea>
+                            <div class="small" style="margin-top:4px;">Số lượng tồn kho sau khi lưu: <b id="stock-cnt-{{ p.id }}">{{ p.stock_count }}</b></div>
+                            <p><button type="submit" class="primary">Lưu thay đổi</button>
+                            <button type="button" onclick="document.getElementById('edit-{{ p.id }}').style.display='none'">Hủy</button></p>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Chưa có sản phẩm nào.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if tab == 'orders' %}
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <h2 style="margin:0;">Đơn hàng</h2>
+                <a href="/orders/export?status={{ status_filter }}" style="text-decoration:none;"><button type="button">Tải danh sách (.csv)</button></a>
+            </div>
+            <p class="filter">
+                {% for st, label in [('all', 'Tất cả'), ('pending', 'Chờ duyệt'), ('paid', 'Đã giao'), ('cancelled', 'Đã hủy')] %}
+                <a href="/?tab=orders&status={{ st }}" class="{{ 'on' if status_filter == st else '' }}">{{ label }}</a>
+                {% endfor %}
+            </p>
+            <table>
+                <tr><th>Mã đơn</th><th>Thời gian</th><th>Khách</th><th>Sản phẩm</th><th>Số lượng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                {% for o in orders %}
+                <tr>
+                    <td class="mono"><a href="#" onclick="var d=document.getElementById('order-{{ o.id }}');d.style.display=(d.style.display==='none'?'table-row':'none');return false;" title="Bấm để xem chi tiết">{{ o.order_code }}</a></td>
+                    <td>{{ o.created_at }}</td>
+                    <td>{{ '@' + o.username if o.username else o.chat_id }}</td>
+                    <td>{{ o.product_name }}</td>
+                    <td>{{ o.quantity }}</td>
+                    <td>{{ o.total_amount | vnd }}</td>
+                    <td>
+                        {% if o.status == 'paid' %}<span class="tag ok">Đã giao</span>
+                        {% elif o.status == 'pending' %}<span class="tag wait">Chờ duyệt</span>
+                        {% else %}<span class="tag off">Đã hủy</span>{% endif %}
+                    </td>
+                    <td>
+                        <a href="/orders/{{ o.id }}/download" style="text-decoration:none;"><button type="button">Tải về</button></a>
+                        <form action="/orders/{{ o.id }}/delete" method="post" class="inline" onsubmit="return confirm('Xóa đơn hàng {{ o.order_code }}?');">
+                            <input type="hidden" name="back_tab" value="orders">
+                            <button type="submit" class="danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="order-{{ o.id }}" style="display:none;">
+                    <td colspan="8" style="background:#f7f8fa;">
+                        <p style="margin:0 0 6px;"><b>Chi tiết đơn {{ o.order_code }}</b></p>
+                        <p style="margin:0 0 6px;">Sản phẩm: <b>{{ o.product_name }}</b> x{{ o.quantity }} &middot; Tổng: <b>{{ o.total_amount | vnd }}</b></p>
+                        <p style="margin:0 0 6px;" class="small">Tạo lúc: {{ o.created_at }}{% if o.paid_at %} &middot; Giao lúc: {{ o.paid_at }}{% endif %}</p>
+                        {% if o.delivered_content %}
+                        <p style="margin:0 0 4px;">Hàng đã giao:</p>
+                        <div class="mono" style="white-space:pre-wrap;word-break:break-all;background:#fff;border:1px solid #d5dae1;padding:8px 10px;border-radius:3px;">{{ o.delivered_content }}</div>
+                        {% endif %}
+                        <p style="margin:10px 0 0;">
+                        {% if o.status == 'pending' %}
+                        <form action="/orders/{{ o.id }}/approve" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="orders">
+                            <button type="submit" class="primary">Duyệt</button>
+                        </form>
+                        <form action="/orders/{{ o.id }}/cancel" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="orders">
+                            <button type="submit" class="danger">Hủy</button>
+                        </form>
+                        {% endif %}
+                        <a href="/orders/{{ o.id }}/download" style="text-decoration:none;"><button type="button">Tải đơn (.txt)</button></a>
+                        <form action="/orders/{{ o.id }}/delete" method="post" class="inline" onsubmit="return confirm('Xóa đơn hàng {{ o.order_code }}?');">
+                            <input type="hidden" name="back_tab" value="orders">
+                            <button type="submit" class="danger">Xóa đơn</button>
+                        </form>
+                        </p>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8">Chưa có đơn hàng.</td></tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+
+        {% if tab == 'giftcodes' %}
+        <div class="card">
+            <h2>Tạo Giftcode mới</h2>
+            <form action="/giftcodes/add" method="post">
+                <div class="grid">
+                    <div>
+                        <label>Mã Giftcode (tự động viết hoa)</label>
+                        <input type="text" name="code" placeholder="VD: TANTHU, KM10K..." required>
+                    </div>
+                    <div>
+                        <label>Số Point nhận được</label>
+                        <input type="number" name="points" min="0" value="10000" required>
+                    </div>
+                    <div>
+                        <label>Số dư VNĐ cộng thêm (nếu có)</label>
+                        <input type="number" name="balance" min="0" value="0">
+                    </div>
+                    <div>
+                        <label>Số lượt nhập tối đa</label>
+                        <input type="number" name="max_uses" min="1" value="1" required>
+                    </div>
+                </div>
+                <p><button type="submit" class="primary">Tạo Giftcode</button></p>
+            </form>
+            <p class="small">Mỗi khách hàng chỉ nhập được 1 lần cho mỗi mã Giftcode. Point và Số dư có thể dùng để thanh toán đơn hàng (1 point = 1đ).</p>
+        </div>
+
+        <div class="card">
+            <h2>Danh sách Giftcode</h2>
+            {% if giftcodes %}
+            <table>
+                <tr><th>Mã Giftcode</th><th>Point</th><th>Số dư cộng</th><th>Đã dùng / Tối đa</th><th>Ngày tạo</th><th>Thao tác</th></tr>
+                {% for g in giftcodes %}
+                <tr>
+                    <td class="mono"><b>{{ g.code }}</b></td>
+                    <td>+{{ g.points | num }} point</td>
+                    <td>+{{ g.balance | vnd }}</td>
+                    <td>{{ g.used_count }} / {{ g.max_uses }}</td>
+                    <td>{{ g.created_at }}</td>
+                    <td>
+                        <form action="/giftcodes/{{ g.id }}/delete" method="post" class="inline" onsubmit="return confirm('Xóa Giftcode {{ g.code }}?');">
+                            <button type="submit" class="danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Chưa có Giftcode nào.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Yêu cầu nạp tiền</h2>
+            {% if deposits %}
+            <table>
+                <tr><th>Mã nạp</th><th>Thời gian</th><th>Khách</th><th>Số tiền</th><th>Trạng thái</th><th>Thao tác</th></tr>
+                {% for d in deposits %}
+                <tr>
+                    <td class="mono">{{ d.deposit_code }}</td>
+                    <td>{{ d.created_at }}</td>
+                    <td>{{ '@' + d.username if d.username else d.chat_id }}</td>
+                    <td>{{ d.amount | vnd }}</td>
+                    <td>
+                        {% if d.status == 'paid' %}<span class="tag ok">Đã duyệt</span>
+                        {% elif d.status == 'pending' %}<span class="tag wait">Chờ duyệt</span>
+                        {% else %}<span class="tag off">Đã hủy</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if d.status == 'pending' %}
+                        <form action="/deposits/{{ d.id }}/approve" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="giftcodes">
+                            <button type="submit" class="primary">Duyệt</button>
+                        </form>
+                        <form action="/deposits/{{ d.id }}/cancel" method="post" class="inline">
+                            <input type="hidden" name="back_tab" value="giftcodes">
+                            <button type="submit" class="danger">Hủy</button>
+                        </form>
+                        {% else %}
+                        {{ d.paid_at or '' }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Chưa có yêu cầu nạp tiền nào.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Số dư & Point khách hàng ({{ users | length }})</h2>
+            {% if users %}
+            <table>
+                <tr><th>Chat ID</th><th>Khách hàng</th><th>Số dư</th><th>Point</th><th>Cộng / Trừ (+/-)</th></tr>
+                {% for u in users %}
+                <tr>
+                    <td class="mono">{{ u.chat_id }}</td>
+                    <td>{{ '@' + u.username if u.username else (u.full_name or u.chat_id) }}</td>
+                    <td><b>{{ (u.balance or 0) | vnd }}</b></td>
+                    <td><b>{{ (u.points or 0) | num }} point</b></td>
+                    <td>
+                        <form action="/users/{{ u.chat_id }}/wallet" method="post" class="inline">
+                            <input type="number" name="delta_balance" placeholder="+/- VNĐ" style="width:110px;padding:5px 7px;">
+                            <input type="number" name="delta_points" placeholder="+/- Point" style="width:110px;padding:5px 7px;">
+                            <button type="submit">Cập nhật</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p>Chưa có khách hàng nào.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if tab == 'broadcast' %}
+        <div class="card">
+            <h2>Gửi thông báo cho tất cả khách ({{ stats.total_users }})</h2>
+            <form action="/broadcast" method="post">
+                <textarea name="message" rows="4" required></textarea>
+                <p><button type="submit" class="primary">Gửi thông báo</button></p>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if tab == 'settings' %}
+        <div class="card">
+            <h2>Cài đặt</h2>
+            <form action="/settings" method="post">
+                <div class="grid">
+                    <div>
+                        <label>Mã ngân hàng (MB, VCB, ACB, TCB, BIDV...)</label>
+                        <input type="text" name="bank_id" value="{{ settings.bank_id }}">
+                    </div>
+                    <div>
+                        <label>Số tài khoản</label>
+                        <input type="text" name="bank_account" value="{{ settings.bank_account }}">
+                    </div>
+                    <div>
+                        <label>Tên chủ tài khoản (không dấu)</label>
+                        <input type="text" name="bank_name" value="{{ settings.bank_name }}">
+                    </div>
+                    <div>
+                        <label>Telegram ID admin (gõ /myid vào bot để lấy)</label>
+                        <input type="text" name="admin_telegram_id" value="{{ settings.admin_telegram_id }}">
+                    </div>
+                    <div>
+                        <label>Liên hệ hỗ trợ</label>
+                        <input type="text" name="support_contact" value="{{ settings.support_contact }}">
+                    </div>
+                    <div>
+                        <label>SePay API Key (để trống nếu duyệt tay)</label>
+                        <input type="password" name="sepay_api_key" value="{{ settings.sepay_api_key }}">
+                    </div>
+                </div>
+                <p><button type="submit" class="primary">Lưu cài đặt</button></p>
+            </form>
+            <p class="small">Tự động check bank: tạo webhook SePay trỏ về <code>/webhook/sepay/{{ cur_bot.id if cur_bot else '' }}</code> (mỗi bot một đường dẫn riêng, xác thực API Key), rồi dán key vào ô trên.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
