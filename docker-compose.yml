@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  vibecommerce-core:
+    build: .
+    container_name: vibecommerce-core
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env
+    volumes:
+      - vibe_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  vibe_data:
