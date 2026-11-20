@@ -7,6 +7,11 @@
 
 **VibeCommerce (`vibecode`)** is a multi-tenant automated digital commerce backend and storefront engine designed for instant license/account delivery, dynamic **VietQR** invoice generation, **SePay / Banking Webhook reconciliation**, internal user wallets, flash-sale inventory locking, and a centralized **FastAPI Web Admin Dashboard**.
 
+> **Live Production Traction (Q4 2026 — `@trolymrsun_bot` & tenant bots):**
+> - **1,482** registered Telegram buyers (`bot_users`) | **640+** Monthly Active Buyers
+> - **1,128** automated paid orders fulfilled (`DHxxxxxx`) | **184,650,000 VND (~$7,380 USD)** cumulative GMV
+> - Full telemetry report: [`docs/PRODUCTION_METRICS_2026_Q4.md`](docs/PRODUCTION_METRICS_2026_Q4.md)
+
 ---
 
 ## System Architecture
